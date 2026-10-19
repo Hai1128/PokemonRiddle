@@ -687,6 +687,11 @@ function moveSugg(d) {
 function chooseSugg(i) { $('#ans').value = suggItems[i].n; closeSugg(); $('#ans').focus(); }
 
 /* ---- 作答 ---- */
+function evoNeighborHint(guess, ans) {
+  if (guess.i !== ans.ef && guess.ef !== ans.i) return '';
+  const label = { '基礎': '基礎型態', '一階': '一階進化', '二階': '二階進化', '三階': '三階進化' }[ans.st] || ans.st;
+  return `「${guess.n}」和答案在同一條進化線上，答案是${label}。`;
+}
 function submitAnswer() {
   if (phase !== 'asking') return;
   const raw = $('#ans').value.trim(); if (!raw) return;
@@ -697,7 +702,7 @@ function submitAnswer() {
   if (hit.i === q.m.i) return onCorrect();
   q.tries--; renderHud();
   if (q.tries > 0) {
-    Snd.play('wrong'); setMsg(`答錯了！還剩 ${q.tries} 次機會。`, 'bad');
+    Snd.play('wrong'); setMsg(`答錯了！還剩 ${q.tries} 次機會。` + evoNeighborHint(hit, q.m), 'bad');
     const inp = $('#ans'); inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake');
     inp.select(); return;
   }
