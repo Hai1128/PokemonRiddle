@@ -177,7 +177,7 @@ dialog pre{white-space:pre-wrap;font-family:var(--font);font-size:16px;line-heig
   <!-- 開始畫面 -->
   <section id="screen-start" class="panel" aria-labelledby="start-h">
     <h2 id="start-h">看線索，猜名字！</h2>
-    <p>每題給你 2 個文字線索，輸入這隻寶可夢的<b>繁體中文名字</b>。連續答對，直到答錯為止。</p>
+    <p>每題給你 3 個文字線索，輸入這隻寶可夢的<b>繁體中文名字</b>。連續答對，直到答錯為止。</p>
     <ul class="rules">
       <li>每題有 <b>2 次</b>作答機會，同一題答錯 2 次就結束。</li>
       <li>提示、換題開局各 <b>1 次</b>；連對每 <b>3</b> 題 +1 提示，每 <b>6</b> 題 +1 換題。</li>
@@ -539,17 +539,20 @@ function weightedPick(items, wf) {
 function buildQuestion(m) {
   const useDesc = KINDS.desc.ok(m) && Math.random() < .75;
   const A = makeClue(useDesc ? 'desc' : 'genus', m);
-  const bKinds = Object.keys(KINDS).filter(k => KINDS[k].cls === 'b' && KINDS[k].ok(m));
+  const T = makeClue('type', m);   // 新增：屬性，每題固定顯示
+  // B 候選要排除 'type'，否則屬性會重複出現
+  const bKinds = Object.keys(KINDS).filter(k => KINDS[k].cls === 'b' && k !== 'type' && KINDS[k].ok(m));
   let cands = bKinds.map(k => makeClue(k, m));
-  if (A.k === 'genus') { // 分類本身範圍較廣：挑能把答案縮小到 5 隻以內的輔助線索
-    const cnt = c => MONS.filter(x => x.ge === A.sig && KINDS[c.k].match(c, x)).length;
+  if (A.k === 'genus') { // 計算符合數時要把屬性也算進去
+    const cnt = c => MONS.filter(x => x.ge === A.sig && KINDS.type.match(T, x) && KINDS[c.k].match(c, x)).length;
     const scored = cands.map(c => ({ c, n: cnt(c) }));
     const good = scored.filter(s => s.n <= 5);
     cands = good.length ? good.map(s => s.c) : [scored.sort((a, b) => a.n - b.n)[0].c];
   }
   const B = weightedPick(cands, c => KINDS[c.k].w(m));
-  const reserve = Object.keys(KINDS).filter(k => k !== A.k && k !== B.k && KINDS[k].ok(m)).map(k => makeClue(k, m));
-  return { m, shown: [A, B], reserve, tries: 2, guesses: [], usedHint: false };
+  // 提示的備用線索也要排除 'type'（已經顯示了）
+  const reserve = Object.keys(KINDS).filter(k => k !== A.k && k !== 'type' && k !== B.k && KINDS[k].ok(m)).map(k => makeClue(k, m));
+  return { m, shown: [A, T, B], reserve, tries: 2, guesses: [], usedHint: false };
 }
 function pickMon(state) {
   const sel = state.gens;
