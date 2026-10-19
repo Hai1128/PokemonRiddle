@@ -688,7 +688,7 @@ function chooseSugg(i) { $('#ans').value = suggItems[i].n; closeSugg(); $('#ans'
 
 /* ---- 作答 ---- */
 function evoNeighborHint(guess, ans) {
-  if (guess.i !== ans.ef && guess.ef !== ans.i) return '';
+  if (guess.ch !== ans.ch || guess.i !== ans.i) return '';
   const label = { '基礎': '基礎型態', '一階': '一階進化', '二階': '二階進化', '三階': '三階進化' }[ans.st] || ans.st;
   return `「${guess.n}」和答案在同一條進化線上，答案是${label}。`;
 }
